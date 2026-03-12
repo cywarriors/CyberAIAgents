@@ -1,0 +1,99 @@
+version: "3.9"
+
+services:
+  vapt-agent:
+    build:
+      context: ..
+      dockerfile: deploy_vapt/Dockerfile
+    container_name: vapt-agent
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+      - "9091:9091"
+    environment:
+      AGENT_ENV: production
+      LOG_LEVEL: INFO
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_SCAN_REQUESTS_TOPIC: vapt.scan-requests
+      KAFKA_FINDINGS_TOPIC: vapt.findings
+      REDIS_URL: redis://redis:6379/2
+      POSTGRES_DSN: postgresql://vapt:vapt@postgres:5432/vapt
+      HEALTH_CHECK_PORT: "8083"
+      PROMETHEUS_PORT: "9091"
+      REPORT_OUTPUT_DIR: /data/reports
+    volumes:
+      - vapt-reports:/data/reports
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - vapt-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: vapt-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6381:6379"
+    networks:
+      - vapt-net
+
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: vapt-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "9094:9092"
+    networks:
+      - vapt-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: vapt-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vapt
+      POSTGRES_PASSWORD: vapt
+      POSTGRES_DB: vapt
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vapt"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5434:5432"
+    volumes:
+      - vapt-pgdata:/var/lib/postgresql/data
+    networks:
+      - vapt-net
+
+volumes:
+  vapt-reports:
+  vapt-pgdata:
+
+networks:
+  vapt-net:
+    driver: bridge

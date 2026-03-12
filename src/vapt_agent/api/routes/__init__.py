@@ -1,0 +1,1 @@
+"""VAPT API routes package."""

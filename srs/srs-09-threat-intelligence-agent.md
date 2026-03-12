@@ -356,6 +356,99 @@ Governance: Source Quality Registry | IOC Lifecycle Store | TLP Enforcement | Fe
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Threat Intelligence Agent GUI provides a web-based interface for exploring intelligence feeds, managing IOC lifecycles, reviewing threat briefs, and analyzing threat actor profiles. Designed for threat intelligence analysts, SOC teams, and security leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Intel Dashboard          | Threat Intel Analysts, Leadership| Feed health, IOC volume, operationalization rate, trending threats |
+| GUI-02    | IOC Explorer             | Threat Intel, SOC Analysts       | Searchable IOC database with enrichment, relationships, and confidence |
+| GUI-03    | Threat Brief Viewer      | All Security Teams               | Curated intelligence briefs with ATT&CK mapping and recommendations |
+| GUI-04    | Actor Profile Database   | Threat Intel Analysts            | Threat actor profiles with TTPs, targets, campaign history |
+| GUI-05    | Feed Manager             | Threat Intel Analysts            | Feed source configuration, health monitoring, quality scoring |
+| GUI-06    | IOC Lifecycle Manager    | Threat Intel Analysts            | IOC aging, deprecation, re-validation workflow |
+| GUI-07    | Detection Mapping        | Detection Engineers, Threat Intel| Map IOCs and TTPs to detection rules; coverage gap analysis |
+| GUI-08    | Administration           | Platform Engineering             | Feed integration config, enrichment source management, system health |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Intel Dashboard
+- **Widgets**: IOC ingestion rate timeline, feed health status grid, IOC type distribution (donut), operationalization rate gauge, trending threat actors/campaigns, intelligence brief publication rate.
+- **Interactions**: Click-through to filtered IOC explorer or brief viewer. Time range selector. Auto-refresh every 60 seconds.
+
+#### GUI-02: IOC Explorer
+- **Features**: Data table with type (IP, domain, hash, URL, email), value, confidence score, source feed(s), first/last seen, associated campaigns/actors, and status (active/deprecated). Relationship graph showing IOC-to-IOC and IOC-to-actor links.
+- **Actions**: Enrich, operationalize to detection, deprecate, export (STIX 2.1/CSV), pivot to external sources.
+- **Search**: Full-text search with type-ahead across IOC values, descriptions, and tags.
+
+#### GUI-03: Threat Brief Viewer
+- **Features**: Rich-text intelligence briefs with executive summary, technical analysis, IOC appendix, ATT&CK mapping, and recommended defensive actions. Version history. Distribution tracking (read receipts).
+
+#### GUI-04: Actor Profile Database
+- **Features**: Actor cards with aliases, attributed campaigns, targeted sectors/regions, TTPs (ATT&CK mapped), associated IOCs. Relationship graph between actors, campaigns, and infrastructure.
+
+#### GUI-05: Feed Manager
+- **Features**: Feed source list with health indicators (last poll, success rate, IOC yield). Quality score per feed based on false positive rate and enrichment utility. Add/configure/disable feeds.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/iocs`                    | GET    | Paginated IOC query with filters          |
+| `/api/v1/iocs/{id}`               | GET/PUT| IOC detail and lifecycle actions            |
+| `/api/v1/iocs/{id}/relationships` | GET    | IOC relationship graph data                |
+| `/api/v1/iocs/export`             | POST   | Bulk IOC export (STIX 2.1/CSV)             |
+| `/api/v1/briefs`                  | GET    | Intelligence brief list                    |
+| `/api/v1/briefs/{id}`             | GET    | Brief detail with IOC appendix             |
+| `/api/v1/actors`                  | GET    | Threat actor profile list                  |
+| `/api/v1/actors/{id}`             | GET    | Actor detail with TTP and campaign data    |
+| `/api/v1/feeds`                   | CRUD   | Feed source management                     |
+| `/api/v1/feeds/{id}/health`       | GET    | Feed health and quality metrics            |
+| `/api/v1/dashboard/intel`         | GET    | Aggregated intelligence dashboard metrics  |
+| `/ws/notifications`              | WS     | New IOC and brief publication alerts       |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., Feed Manager restricted to Threat Intel Analyst role). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | TLP-classified intel SHALL enforce access restrictions based on classification level. |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

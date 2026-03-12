@@ -356,6 +356,103 @@ Governance: Decoy Registry | Honey Credential Vault | Interaction Log | Coverage
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Deception and Honeypot Agent GUI provides a web-based interface for deploying and managing decoy assets, monitoring attacker interactions in real-time, analyzing captured TTPs, and managing deception campaigns. Designed for deception specialists, red/blue team engineers, and threat intelligence analysts.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Deception Dashboard      | Deception Specialist, Leadership | Decoy deployment status, interaction volume, detection effectiveness |
+| GUI-02    | Decoy Deployment Manager | Deception Specialist             | Deploy, configure, and lifecycle-manage decoy assets |
+| GUI-03    | Interaction Monitor      | Deception Specialist, SOC        | Real-time attacker interaction feed with session replay |
+| GUI-04    | TTP Profiler             | Threat Intel, Red Team           | Captured attacker techniques mapped to ATT&CK framework |
+| GUI-05    | Campaign Manager         | Deception Specialist             | Plan and manage deception campaigns with objectives and metrics |
+| GUI-06    | Breadcrumb Designer      | Deception Specialist             | Design and deploy credential lures, document decoys, network breadcrumbs |
+| GUI-07    | Coverage Heatmap         | Leadership, Blue Team            | Network topology overlay showing deception coverage density |
+| GUI-08    | Administration           | Platform Engineering             | Decoy template management, network config, system health |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Deception Dashboard
+- **Widgets**: Active decoy count by type (bar chart), interaction volume timeline, detection rate gauge, top interacted decoys (horizontal bar), geographic origin of interactions (map), TTP coverage percentage.
+- **Interactions**: Click-through to interaction detail. Decoy type / network segment filter. Auto-refresh every 15 seconds.
+
+#### GUI-02: Decoy Deployment Manager
+- **Features**: Decoy template catalog (SSH honeypot, web app, file share, database, API endpoint, credential lure). Deploy wizard with network placement, fidelity level, and monitoring configuration. Lifecycle status (Staging → Active → Triggered → Investigating → Retired). Bulk management.
+- **Visualization**: Network topology view showing decoy placement relative to real assets.
+
+#### GUI-03: Interaction Monitor
+- **Features**: Real-time interaction feed with timestamp, source IP, decoy target, interaction type, and risk level. Session replay for detailed analysis (keystroke capture, command log, file access). Alert on first interaction per unique source.
+- **Layout**: Split view — interaction list (left), session detail/replay (right).
+
+#### GUI-04: TTP Profiler
+- **Features**: ATT&CK technique heatmap populated from captured interactions. Per-technique drill-down showing source, decoy, session data. Actor clustering based on behavioral patterns. Export to threat intelligence (SRS-09 integration).
+
+#### GUI-06: Breadcrumb Designer
+- **Features**: Visual breadcrumb trail designer showing lure placement across network. Template library for common lure types (credentials, documents, registry keys, DNS entries). Effectiveness tracking per lure.
+
+#### GUI-07: Coverage Heatmap
+- **Features**: Network topology overlay with deception coverage density by segment. Gap identification with deployment recommendations. Comparison of deception coverage vs asset criticality.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+| UX-08   | Session replay SHALL render in sandboxed context with no outbound network access.   |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/decoys`                  | CRUD   | Decoy lifecycle management                 |
+| `/api/v1/decoys/{id}/status`      | GET    | Decoy status and health                    |
+| `/api/v1/interactions`            | GET    | Paginated interaction list with filters    |
+| `/api/v1/interactions/{id}`       | GET    | Interaction detail with session data       |
+| `/api/v1/interactions/{id}/replay`| GET    | Session replay data stream                 |
+| `/api/v1/campaigns`               | CRUD   | Deception campaign management              |
+| `/api/v1/breadcrumbs`             | CRUD   | Breadcrumb/lure lifecycle management       |
+| `/api/v1/ttps`                    | GET    | Captured TTP data and ATT&CK mapping      |
+| `/api/v1/coverage`                | GET    | Network deception coverage data            |
+| `/api/v1/dashboard/deception`     | GET    | Aggregated deception dashboard metrics     |
+| `/ws/interactions`                | WS     | Real-time interaction stream               |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., Decoy Deployment restricted to Deception Specialist role). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | Decoy network placement details SHALL be classified and access-restricted.       |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session replay content SHALL be rendered in isolated sandboxed context.          |
+| GUI-SEC-07 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

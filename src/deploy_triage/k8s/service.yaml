@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: incident-triage-agent
+  labels:
+    app: incident-triage-agent
+spec:
+  selector:
+    app: incident-triage-agent
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http
+      protocol: TCP
+  type: ClusterIP

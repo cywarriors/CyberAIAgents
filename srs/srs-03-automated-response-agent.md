@@ -340,6 +340,98 @@ Governance: Playbook Registry | Secrets Vault | Execution Metrics | Checkpoint D
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Automated Response (SOAR) Agent GUI provides a web-based interface for managing response playbooks, monitoring containment actions, reviewing approval workflows, and tracking rollback operations. Designed for SOC analysts, incident responders, and security leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Response Dashboard       | SOC Analysts, Leadership         | Active responses, containment success rate, MTTR trends |
+| GUI-02    | Playbook Manager         | Detection Engineers, Analysts    | Create, edit, version, and deploy response playbooks |
+| GUI-03    | Execution Console        | SOC Analysts, Incident Responders| Real-time response action execution and status tracking |
+| GUI-04    | Approval Queue           | Incident Managers                | Pending HITL approvals with context and risk assessment |
+| GUI-05    | Containment Status       | SOC Analysts                     | Active containment actions with scope and expiry timers |
+| GUI-06    | Rollback Manager         | Incident Responders              | Rollback history, pending rollbacks, one-click revert |
+| GUI-07    | Response Analytics       | Leadership                       | MTTR trends, playbook effectiveness, containment metrics |
+| GUI-08    | Administration           | Platform Engineering             | Integration config, action permissions, system health |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Response Dashboard
+- **Widgets**: Active response count, MTTR gauge, containment success rate (donut), playbook execution timeline, approval queue depth, recent rollbacks.
+- **Interactions**: Click-through to execution details. Time range selector. Auto-refresh every 10 seconds.
+
+#### GUI-02: Playbook Manager
+- **Features**: Visual playbook builder with drag-and-drop action nodes. Version history with diff viewer. Test execution against simulated incidents. Deployment lifecycle (Draft → Testing → Production → Deprecated).
+- **Actions**: Clone, fork, compare versions, promote to production with approval gate.
+
+#### GUI-03: Execution Console
+- **Features**: Real-time action execution timeline showing each playbook step. Status indicators (Pending → Running → Success/Failed/Rolled Back). Expandable step details with logs and evidence.
+- **Controls**: Pause, resume, abort, manual override for individual steps.
+
+#### GUI-04: Approval Queue
+- **Features**: Pending approval cards with incident context, risk assessment, recommended action, and blast radius analysis. One-click approve/deny with mandatory comment. SLA countdown.
+
+#### GUI-06: Rollback Manager
+- **Features**: Active containment table with original action, scope, expiry, rollback status. One-click rollback with confirmation. Rollback history with success/failure outcomes.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+| UX-08   | Approval actions SHALL require confirmation dialog with mandatory comment.           |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/responses`               | GET    | Paginated response execution list         |
+| `/api/v1/responses/{id}`          | GET    | Response execution detail with step log    |
+| `/api/v1/responses/{id}/actions`  | POST   | Pause, resume, abort execution             |
+| `/api/v1/playbooks`               | CRUD   | Playbook lifecycle management              |
+| `/api/v1/playbooks/{id}/test`     | POST   | Test playbook against simulated incident   |
+| `/api/v1/approvals`               | GET    | Pending approval queue                     |
+| `/api/v1/approvals/{id}`          | PUT    | Approve or deny with comment               |
+| `/api/v1/rollbacks`               | GET/POST| Rollback history and trigger               |
+| `/api/v1/dashboard/metrics`      | GET    | Aggregated response metrics                |
+| `/ws/notifications`              | WS     | Real-time execution and approval alerts    |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., Playbook Manager restricted to Detection Engineer role). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | Approval actions SHALL require re-authentication for high-risk responses.         |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

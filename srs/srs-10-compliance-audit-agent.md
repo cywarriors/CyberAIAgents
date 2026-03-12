@@ -351,6 +351,97 @@ Governance: Control Catalog | Evidence Vault (Immutable) | Audit Trail | Framewo
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Compliance and Audit Agent GUI provides a web-based interface for managing compliance frameworks, tracking control implementation, collecting evidence, and preparing audit deliverables. Designed for compliance analysts, auditors, control owners, and governance leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Compliance Dashboard     | Leadership, Compliance Team      | Framework compliance scores, gap summaries, audit readiness gauge |
+| GUI-02    | Framework Manager        | Compliance Analysts              | Configure frameworks, map controls, manage cross-framework mapping |
+| GUI-03    | Control Status Tracker   | Control Owners, Compliance       | Per-control implementation status, evidence, gap remediation |
+| GUI-04    | Evidence Collector       | Control Owners, Compliance       | Evidence upload, automated collection status, freshness tracking |
+| GUI-05    | Gap Analysis View        | Compliance, Leadership           | Identified gaps with remediation plans, priority, and ownership |
+| GUI-06    | Audit Preparation        | Auditors, Compliance             | Audit package generation, deliverable review, assessor portal |
+| GUI-07    | Control Effectiveness    | Compliance, Leadership           | Control testing results, effectiveness trends, maturity scoring |
+| GUI-08    | Administration           | Platform Engineering             | Framework config, evidence source integration, notification settings |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Compliance Dashboard
+- **Widgets**: Framework compliance score gauges (per framework), overall compliance trend line, gap count by severity (bar chart), evidence freshness percentage, upcoming audit dates, top non-compliant control domains.
+- **Interactions**: Framework selector. Click-through to control detail. Department/business unit filter.
+
+#### GUI-02: Framework Manager
+- **Features**: Framework catalog (SOC 2, PCI-DSS, ISO 27001, HIPAA, NIST 800-53, custom). Control hierarchy browser. Cross-framework control mapping (one control satisfies multiple frameworks). Import/export framework definitions.
+
+#### GUI-03: Control Status Tracker
+- **Features**: Control table with ID, description, owner, implementation status (Implemented/Partial/Not Implemented/Not Applicable), evidence status, last assessment date. Inline detail panels with evidence links, test results, remediation notes.
+- **Actions**: Update status, assign owner, request evidence, create gap remediation ticket.
+
+#### GUI-04: Evidence Collector
+- **Features**: Per-control evidence requirements with upload interface. Automated evidence collection status from integrated systems. Evidence freshness indicator with auto-refresh scheduling. Version history per evidence artifact.
+
+#### GUI-06: Audit Preparation
+- **Features**: Audit package builder with framework selection, scope definition, and deliverable checklist. Document generation (control matrix, evidence binder, gap summary). Assessor portal with read-only access and comment capability.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/frameworks`              | CRUD   | Framework lifecycle management             |
+| `/api/v1/frameworks/{id}/controls`| GET    | Controls for a framework                   |
+| `/api/v1/controls`                | GET    | Paginated control list with filters        |
+| `/api/v1/controls/{id}`           | GET/PUT| Control detail and status update            |
+| `/api/v1/controls/{id}/evidence`  | GET/POST| Evidence for a control                    |
+| `/api/v1/gaps`                    | GET    | Gap analysis list with filters             |
+| `/api/v1/gaps/{id}`               | GET/PUT| Gap detail and remediation tracking         |
+| `/api/v1/audits`                  | CRUD   | Audit preparation and package management   |
+| `/api/v1/audits/{id}/package`     | GET    | Download audit deliverable package          |
+| `/api/v1/dashboard/compliance`    | GET    | Aggregated compliance dashboard metrics    |
+| `/ws/notifications`              | WS     | Evidence freshness and gap alerts           |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., Audit Preparation restricted to Compliance Analyst and Auditor roles). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | External assessor access SHALL use scoped read-only portal with time-limited tokens. |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

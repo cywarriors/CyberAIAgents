@@ -350,6 +350,98 @@ Governance: Verdict Audit Logs | Feedback Store | Model Registry | Checkpoint DB
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Phishing Defense Agent GUI provides a web-based interface for managing email quarantine queues, reviewing phishing verdicts, tracking campaign intelligence, and monitoring user awareness metrics. Designed for SOC analysts, email security engineers, and security awareness teams.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Phishing Dashboard       | SOC Analysts, Leadership         | Verdict volume, detection rate, campaign activity trends |
+| GUI-02    | Quarantine Queue         | SOC Analysts                     | Review quarantined emails with verdict, release/delete actions |
+| GUI-03    | Verdict Detail           | SOC Analysts, Email Engineers    | Full email analysis: headers, URLs, attachments, sandbox results |
+| GUI-04    | Campaign Tracker         | Threat Intel, SOC Analysts       | Cluster related phishing emails into campaigns with IOC mapping |
+| GUI-05    | URL/Attachment Analyzer  | SOC Analysts                     | Detailed URL reputation, redirect chain, sandbox detonation results |
+| GUI-06    | User Awareness Dashboard | Awareness Team, Leadership       | Click-through rates, reporter metrics, training effectiveness |
+| GUI-07    | Reported Email Queue     | SOC Analysts                     | User-reported suspicious emails awaiting analyst review |
+| GUI-08    | Administration           | Platform Engineering             | Email gateway config, detection threshold tuning, integration health |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Phishing Dashboard
+- **Widgets**: Daily verdict volume (stacked bar: clean/suspicious/malicious), detection rate gauge, top targeted users/departments, campaign activity timeline, user report rate trend, false positive rate.
+- **Interactions**: Click-through to filtered quarantine queue. Time range selector. Auto-refresh every 30 seconds.
+
+#### GUI-02: Quarantine Queue
+- **Features**: Data table with subject, sender, recipient, verdict, confidence score, timestamp. Color-coded verdicts. Preview panel with defanged content. Actions: release, delete, report false positive, escalate.
+- **Bulk Actions**: Mass release (with justification), mass delete, export.
+
+#### GUI-03: Verdict Detail
+- **Features**: Email header analysis, URL reputation scores with redirect chain visualization, attachment sandbox results with behavioral indicators, WHOIS data for sender domain, similar historical emails.
+- **Actions**: Override verdict, add sender/domain to allow/block list, extract IOCs to threat intel.
+
+#### GUI-04: Campaign Tracker
+- **Features**: Campaign timeline showing related email clusters. IOC correlation (domains, IPs, sender patterns). ATT&CK technique mapping. Impact assessment (delivery count, click count, credential harvest count).
+
+#### GUI-06: User Awareness Dashboard
+- **Features**: Click-through rate trends by department. Top reporters leaderboard. Training completion metrics. Simulated phishing exercise results.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+| UX-08   | Email content previews SHALL be rendered in a sandboxed iframe with defanged URLs.   |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/quarantine`              | GET    | Paginated quarantine queue with filters   |
+| `/api/v1/quarantine/{id}`         | GET/PUT| Email detail and analyst actions           |
+| `/api/v1/quarantine/{id}/release` | POST   | Release email from quarantine              |
+| `/api/v1/verdicts`                | GET    | Verdict history with filtering             |
+| `/api/v1/campaigns`               | GET    | Phishing campaign clusters                 |
+| `/api/v1/campaigns/{id}`          | GET    | Campaign detail with IOC mapping           |
+| `/api/v1/reported`                | GET    | User-reported email queue                  |
+| `/api/v1/awareness/metrics`       | GET    | User awareness dashboard data              |
+| `/api/v1/dashboard/summary`      | GET    | Aggregated phishing defense metrics        |
+| `/ws/notifications`              | WS     | Real-time verdict and campaign alerts      |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., quarantine release restricted to Senior Analyst role). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | Email content SHALL be rendered in sandboxed context with disabled external resource loading. |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

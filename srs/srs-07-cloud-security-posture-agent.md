@@ -348,6 +348,97 @@ Governance: Policy Registry | Snapshot History | Remediation Audit Log | Risk Ac
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Cloud Security Posture Management Agent GUI provides a web-based interface for monitoring cloud configuration compliance, investigating misconfigurations, tracking remediation progress, and managing multi-cloud security posture. Designed for cloud security engineers, DevOps teams, and compliance leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Cloud Posture Dashboard  | Cloud Security, Leadership       | Multi-cloud compliance scores, misconfiguration trends, drift stats |
+| GUI-02    | Finding Browser          | Cloud Security Engineers         | Filterable misconfiguration findings with remediation guidance |
+| GUI-03    | Account/Subscription View| Cloud Security, DevOps           | Per-account compliance score, resource inventory, finding density |
+| GUI-04    | Compliance Scorecard     | Compliance, Leadership           | CIS/NIST/custom benchmark scores by account, service, region |
+| GUI-05    | IaC Pre-Deploy Gate      | DevOps, Cloud Security           | Infrastructure-as-code scan results with approval workflow |
+| GUI-06    | Drift Detector           | Cloud Security Engineers         | Configuration drift between scans with change attribution |
+| GUI-07    | Public Exposure Monitor  | Cloud Security, SOC              | Real-time publicly exposed resource alerts with blast radius |
+| GUI-08    | Administration           | Platform Engineering             | Cloud account onboarding, benchmark config, scan scheduling |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Cloud Posture Dashboard
+- **Widgets**: Overall compliance score gauge, compliance trend line (over 30/60/90 days), findings by severity across clouds (stacked bar), top non-compliant services (horizontal bar), public exposure count (critical alert widget), drift percentage.
+- **Interactions**: Cloud provider filter (AWS/Azure/GCP/multi). Account/subscription selector. Click-through to filtered finding browser.
+
+#### GUI-02: Finding Browser
+- **Features**: Data table with server-side pagination, filtering by cloud provider, account, service, region, severity, compliance framework, and remediation status. Inline detail panels with misconfiguration description, affected resource, remediation steps (manual + IaC fix).
+- **Bulk Actions**: Create ticket, apply auto-remediation, add exception, export.
+
+#### GUI-04: Compliance Scorecard
+- **Features**: Benchmark selector (CIS AWS/Azure/GCP, NIST 800-53, SOC 2, custom). Hierarchical drilldown: Framework → Control Domain → Individual Control → Findings. Pass/fail/exception status per control. Historical score trend.
+
+#### GUI-05: IaC Pre-Deploy Gate
+- **Features**: Terraform/CloudFormation/Bicep scan results. Findings table with line-level code reference. Approval/rejection workflow with reviewer comments. Policy-as-code rule management.
+
+#### GUI-07: Public Exposure Monitor
+- **Features**: Real-time alert cards for publicly exposed resources (storage buckets, databases, APIs, VMs). Blast radius assessment. One-click remediation trigger. Integration with SRS-03 automated response.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/findings`                | GET    | Paginated finding query with filters      |
+| `/api/v1/findings/{id}`           | GET/PUT| Finding detail and remediation status      |
+| `/api/v1/accounts`                | GET    | Cloud account list with compliance scores  |
+| `/api/v1/accounts/{id}/resources` | GET    | Resource inventory for an account          |
+| `/api/v1/compliance/scores`       | GET    | Compliance scorecard by benchmark          |
+| `/api/v1/compliance/controls`     | GET    | Control-level pass/fail detail             |
+| `/api/v1/iac/scans`               | GET/POST| IaC scan results and trigger               |
+| `/api/v1/drift`                   | GET    | Configuration drift between scans          |
+| `/api/v1/exposure/alerts`         | GET    | Public exposure alert feed                 |
+| `/api/v1/dashboard/posture`      | GET    | Aggregated posture dashboard metrics       |
+| `/ws/notifications`              | WS     | Real-time exposure and drift alerts        |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role and cloud account scope (e.g., DevOps sees only their accounts). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | Auto-remediation actions SHALL require explicit confirmation with impact preview. |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

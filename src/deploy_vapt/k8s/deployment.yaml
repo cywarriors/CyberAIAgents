@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vapt-agent
+  labels:
+    app: vapt-agent
+    srs: SRS-CYBER-13
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vapt-agent
+  template:
+    metadata:
+      labels:
+        app: vapt-agent
+        srs: SRS-CYBER-13
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9091"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: vapt-agent
+          image: cyberai/vapt-agent:latest
+          ports:
+            - containerPort: 8083
+              name: health
+            - containerPort: 9091
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: vapt-agent-config
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: reports
+              mountPath: /data/reports
+      volumes:
+        - name: reports
+          emptyDir: {}

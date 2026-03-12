@@ -354,6 +354,99 @@ Governance: Scan Rule Registry | Finding Lifecycle Store | Policy Config | FP Le
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Security Code Review (AppSec) Agent GUI provides a web-based interface for browsing code security findings, reviewing PR-level scan results, managing fix suggestions, and tracking developer remediation metrics. Designed for application security engineers, developers, and engineering leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | AppSec Dashboard         | AppSec Engineers, Leadership     | Finding volume trends, fix rates, repo coverage, top CWE categories |
+| GUI-02    | Finding Browser          | AppSec Engineers, Developers     | Filterable security finding table with code context and fix suggestions |
+| GUI-03    | PR Review View           | Developers, AppSec Engineers     | PR-level scan results with inline code annotations |
+| GUI-04    | Repository Overview      | AppSec Engineers                 | Per-repo security posture, finding density, scan history |
+| GUI-05    | Fix Suggestion Manager   | AppSec Engineers                 | AI-generated fix suggestions with acceptance/rejection tracking |
+| GUI-06    | Developer Dashboard      | Developers, Engineering Leads    | Per-developer/team finding metrics, fix adoption rate, learning resources |
+| GUI-07    | Policy Manager           | AppSec Engineers                 | Security scanning policy configuration per repo/org |
+| GUI-08    | Administration           | Platform Engineering             | Scanner engine config, language support, integration health |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: AppSec Dashboard
+- **Widgets**: Open finding count by severity (stacked bar), fix rate trend (line chart), top 10 CWE categories (horizontal bar), repository scan coverage gauge, mean time to fix trend, finding escape rate to production.
+- **Interactions**: Repository/team/language filter. Time range selector. Click-through to filtered finding browser.
+
+#### GUI-02: Finding Browser
+- **Features**: Data table with server-side pagination, filtering by repository, severity, CWE, language, finding status, age. Inline code viewer with highlighted vulnerable lines and surrounding context. Fix suggestion panel with diff preview.
+- **Actions**: Assign, create ticket, mark false positive, accept/modify fix suggestion, suppress with justification.
+
+#### GUI-03: PR Review View
+- **Features**: PR scan summary with new findings, fixed findings, and net change. Inline code annotations on diff view showing finding location, severity, and fix suggestion. One-click approve fix or dismiss with reason.
+- **Integration**: Deep link from PR notification (GitHub/GitLab/Azure DevOps) to agent PR view.
+
+#### GUI-04: Repository Overview
+- **Features**: Repository security scorecard (finding density, fix velocity, coverage). Finding trend over time. Language breakdown. Branch protection and scanning policy status.
+
+#### GUI-05: Fix Suggestion Manager
+- **Features**: Queue of AI-generated fix suggestions with original vs suggested code diff. Confidence score. Acceptance rate metrics. Bulk approve/reject. Feedback mechanism for model improvement.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+| UX-08   | Code viewers SHALL support syntax highlighting for all supported languages.          |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/findings`                | GET    | Paginated finding query with filters      |
+| `/api/v1/findings/{id}`           | GET/PUT| Finding detail and analyst actions          |
+| `/api/v1/findings/{id}/fix`       | GET/PUT| Fix suggestion detail and accept/reject    |
+| `/api/v1/repos`                   | GET    | Repository list with security scores       |
+| `/api/v1/repos/{id}/findings`     | GET    | Findings for a specific repository         |
+| `/api/v1/repos/{id}/history`      | GET    | Scan history for a repository              |
+| `/api/v1/prs/{id}/scan`           | GET    | PR-level scan results                      |
+| `/api/v1/policies`                | CRUD   | Scanning policy management                 |
+| `/api/v1/developers/metrics`      | GET    | Developer fix adoption metrics             |
+| `/api/v1/dashboard/appsec`        | GET    | Aggregated AppSec dashboard metrics        |
+| `/ws/notifications`              | WS     | New finding and PR scan completion alerts  |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict finding visibility by repository access (e.g., developers see only their repos). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | Source code rendering SHALL be read-only with no clipboard access to code context. |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

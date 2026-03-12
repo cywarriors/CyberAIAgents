@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder contains production-ready SRS documents for 12 AI-powered cybersecurity agents built on the **LangGraph** framework. Each document follows a standardised 19-section template designed for engineering implementation, stakeholder review, and audit readiness.
+This folder contains production-ready SRS documents for 13 AI-powered cybersecurity agents built on the **LangGraph** framework. Each document follows a standardised 20-section template designed for engineering implementation, stakeholder review, and audit readiness.
 
 ---
 
@@ -22,10 +22,11 @@ This folder contains production-ready SRS documents for 12 AI-powered cybersecur
 | 10 | [SRS-10](srs-10-compliance-audit-agent.md)            | Compliance and Audit Agent                |
 | 11 | [SRS-11](srs-11-security-code-review-agent.md)        | Security Code Review (AppSec) Agent       |
 | 12 | [SRS-12](srs-12-deception-honeypot-agent.md)          | Deception and Honeypot Agent              |
+| 13 | [SRS-13](srs-13-vapt-agent.md)                        | VAPT (Vulnerability Assessment & Penetration Testing) Agent |
 
 ---
 
-## Common SRS Structure (19 Sections)
+## Common SRS Structure (20 Sections)
 
 Every SRS document follows this production-ready template:
 
@@ -51,6 +52,7 @@ Every SRS document follows this production-ready template:
 | 17 | How to Use This Agent             | Phased rollout guide (setup, pilot, production, ongoing)   |
 | 18 | Acceptance Criteria               | Criteria with validation methods                           |
 | 19 | KPIs and Success Metrics          | Measurable targets with cadence                            |
+| 20 | Graphical User Interface (GUI)    | Technology stack, screen inventory, UX requirements, API contract, security controls |
 | -  | Revision History                  | Version, date, author, and change log                      |
 
 ---

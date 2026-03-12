@@ -344,6 +344,96 @@ Governance Layer: Model Registry | Audit Log Store | Policy Controls | Checkpoin
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Threat Detection Agent GUI provides a real-time web-based interface for monitoring detection pipelines, investigating alerts, managing detection rules, and reviewing anomaly trends. Designed for SOC analysts, detection engineers, and security leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Detection Dashboard      | SOC Analysts, Leadership         | Real-time alert volume, severity breakdown, MTTD trends |
+| GUI-02    | Alert Investigation      | SOC Analysts                     | Alert detail, context enrichment, timeline, analyst actions |
+| GUI-03    | Detection Coverage       | Detection Engineers              | ATT&CK heatmap, rule coverage gaps, technique mapping |
+| GUI-04    | Rule Management          | Detection Engineers              | Create, edit, test, and deploy detection rules   |
+| GUI-05    | Anomaly Explorer         | SOC Analysts, Detection Engineers| Anomaly timeline, statistical deviation viewer, baseline comparison |
+| GUI-06    | Pipeline Health          | Platform Engineering             | Node throughput, latency, error rates, queue depths |
+| GUI-07    | Tuning Workbench         | Detection Engineers              | False positive analysis, threshold tuning, feedback loop metrics |
+| GUI-08    | Administration           | Platform Engineering             | User management, integration config, system health |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Detection Dashboard
+- **Widgets**: Alert volume timeline (area chart), severity distribution (donut), MTTD gauge, top triggered rules (bar), active anomaly count, pipeline throughput indicator.
+- **Interactions**: Time range selector (1h/6h/24h/7d/custom). Click-through to filtered alert list. Auto-refresh via WebSocket.
+
+#### GUI-02: Alert Investigation
+- **Features**: Alert detail panel with enriched context (asset info, threat intel, related alerts). Event timeline with correlated log entries. One-click escalation, dismissal, or feedback submission.
+- **Layout**: Master-detail — alert list (left), investigation panel (right) with tabs (Context, Timeline, Related, Actions).
+
+#### GUI-03: Detection Coverage
+- **Features**: Interactive ATT&CK Navigator heatmap showing technique coverage. Gap analysis with recommendation engine. Rule-to-technique mapping table.
+- **Interactions**: Click technique cell to see associated rules and alert volume.
+
+#### GUI-04: Rule Management
+- **Features**: Rule editor with syntax highlighting (Sigma/YARA). Test rule against historical data. Version history and diff viewer. Deployment status tracker (Draft → Testing → Production → Deprecated).
+
+#### GUI-05: Anomaly Explorer
+- **Features**: Anomaly timeline scatter plot showing statistical deviations. Baseline comparison charts. Entity-level anomaly drill-down (user, host, network segment).
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/alerts`                  | GET    | Paginated alert query with filters        |
+| `/api/v1/alerts/{id}`             | GET/PUT| Alert detail and analyst actions           |
+| `/api/v1/alerts/stream`           | WS     | Real-time alert stream                     |
+| `/api/v1/rules`                   | CRUD   | Detection rule lifecycle management        |
+| `/api/v1/rules/{id}/test`         | POST   | Test rule against historical data          |
+| `/api/v1/anomalies`              | GET    | Anomaly query with time range filters      |
+| `/api/v1/coverage/attack`        | GET    | ATT&CK coverage heatmap data               |
+| `/api/v1/dashboard/metrics`      | GET    | Aggregated dashboard metrics               |
+| `/api/v1/pipeline/health`        | GET    | Pipeline node health and throughput        |
+| `/ws/notifications`              | WS     | Global notification channel                |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., Rule Management restricted to Detection Engineer role). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-05 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

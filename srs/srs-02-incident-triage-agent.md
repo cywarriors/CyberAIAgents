@@ -346,6 +346,92 @@ Governance: Incident Graph Store | Feedback DB | Audit Logs | Checkpoint DB
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Incident Triage Agent GUI provides a web-based interface for managing triage queues, reviewing prioritized incidents, exploring correlated alert groups, and tracking analyst workflow efficiency. Designed for SOC analysts, incident managers, and security leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Triage Dashboard         | SOC Analysts, Incident Managers  | Queue overview, priority distribution, triage throughput KPIs |
+| GUI-02    | Incident Queue           | SOC Analysts                     | Sortable/filterable queue with priority, severity, SLA timer |
+| GUI-03    | Incident Detail          | SOC Analysts                     | Full incident context, correlated alerts, enrichment data, timeline |
+| GUI-04    | Correlation Viewer       | SOC Analysts, Detection Engineers| Visual cluster map showing alert-to-incident correlation |
+| GUI-05    | Analyst Workload         | Incident Managers                | Per-analyst queue depth, handling time, throughput metrics |
+| GUI-06    | Triage Analytics         | Leadership                       | MTTT trends, priority accuracy, escalation rates over time |
+| GUI-07    | Playbook Recommendations | SOC Analysts                     | AI-suggested response playbooks with confidence scores |
+| GUI-08    | Administration           | Platform Engineering             | User management, routing rules, integration config |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Triage Dashboard
+- **Widgets**: Open incident count by priority (P1-P4), triage queue depth gauge, MTTT trend line, SLA compliance percentage, top incident categories (bar chart), analyst utilization heatmap.
+- **Interactions**: Click-through to filtered queue. Time range selector. Auto-refresh every 15 seconds.
+
+#### GUI-02: Incident Queue
+- **Features**: Data table with server-side pagination, multi-column sorting (priority, severity, age, SLA remaining). Color-coded priority badges. SLA countdown timers. Bulk assign/escalate actions.
+- **Filters**: Priority, severity, category, assigned analyst, SLA status, time range.
+
+#### GUI-03: Incident Detail
+- **Features**: Incident summary with risk score breakdown. Tabbed panels: Correlated Alerts, Enrichment Data (asset, identity, threat intel), Event Timeline, Recommended Playbooks, Audit Log.
+- **Actions**: Escalate, assign, merge with existing incident, mark false positive, add analyst notes.
+
+#### GUI-04: Correlation Viewer
+- **Features**: Force-directed graph showing alert clusters grouped into incidents. Node size indicates severity; edge labels show correlation method (temporal, entity, technique). Click node to expand alert details.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/incidents`               | GET    | Paginated incident queue with filters     |
+| `/api/v1/incidents/{id}`          | GET/PUT| Incident detail and analyst actions        |
+| `/api/v1/incidents/{id}/correlations` | GET | Correlated alerts for an incident         |
+| `/api/v1/incidents/{id}/playbooks`| GET    | Recommended playbooks with confidence     |
+| `/api/v1/incidents/stream`        | WS     | Real-time incident updates                 |
+| `/api/v1/triage/metrics`          | GET    | Triage KPIs and throughput metrics         |
+| `/api/v1/analysts/workload`       | GET    | Per-analyst workload distribution          |
+| `/api/v1/dashboard/summary`      | GET    | Aggregated dashboard metrics               |
+| `/ws/notifications`              | WS     | Global notification channel                |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., Analyst Workload restricted to Incident Manager role). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-05 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

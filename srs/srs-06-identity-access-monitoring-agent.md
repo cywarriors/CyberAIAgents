@@ -349,6 +349,96 @@ Governance: Entitlement Graph DB | Risk Model Registry | Audit Logs | Feedback S
 
 ---
 
+## 20. Graphical User Interface (GUI) Requirements
+
+### 20.1 Overview
+The Identity and Access Monitoring Agent GUI provides a web-based interface for monitoring identity risk, reviewing access anomalies, managing entitlement reviews, and investigating account compromise indicators. Designed for IAM analysts, identity governance teams, and security leadership.
+
+### 20.2 Technology Stack
+
+| Component        | Technology                                    |
+|------------------|-----------------------------------------------|
+| Frontend         | React 18+ with TypeScript                     |
+| Component Library| Shadcn/UI + Tailwind CSS                      |
+| State Management | Zustand or Redux Toolkit                      |
+| Data Fetching    | TanStack Query (React Query)                  |
+| Charting         | Recharts / D3.js                              |
+| Real-time        | WebSocket (Server-Sent Events fallback)       |
+| Backend API      | FastAPI (Python) with OpenAPI spec             |
+| Authentication   | OIDC / SAML SSO with RBAC enforcement          |
+
+### 20.3 Screen Inventory
+
+| Screen ID | Screen Name              | Primary Users                    | Purpose                                          |
+|-----------|--------------------------|----------------------------------|--------------------------------------------------|
+| GUI-01    | Identity Risk Dashboard  | IAM Analysts, Leadership         | Identity risk score distribution, anomaly trends, high-risk accounts |
+| GUI-02    | Access Anomaly Feed      | IAM Analysts                     | Real-time feed of access anomalies with risk scoring and context |
+| GUI-03    | User Risk Profile        | IAM Analysts                     | Per-user identity risk score, access history, anomaly timeline |
+| GUI-04    | Entitlement Review       | IAM Governance, Managers         | Periodic access review queue with certify/revoke actions |
+| GUI-05    | SoD Violation Tracker    | IAM Governance, Compliance       | Separation of Duties violations with remediation workflow |
+| GUI-06    | Privilege Escalation Monitor | IAM Analysts                 | Real-time privilege escalation detection and investigation |
+| GUI-07    | Access Analytics         | Leadership                       | Login pattern trends, geo-anomaly maps, MFA adoption metrics |
+| GUI-08    | Administration           | Platform Engineering             | IdP integration config, risk model tuning, policy management |
+
+### 20.4 Key Screen Specifications
+
+#### GUI-01: Identity Risk Dashboard
+- **Widgets**: High-risk user count, risk score distribution histogram, anomaly trend line, top 10 riskiest identities, MFA coverage gauge, SoD violation count.
+- **Interactions**: Click-through to user risk profile. Department/role/location filters. Auto-refresh every 30 seconds.
+
+#### GUI-02: Access Anomaly Feed
+- **Features**: Time-sorted anomaly feed with risk score, anomaly type (impossible travel, unusual access pattern, credential stuffing, privilege escalation), affected user, and recommended action.
+- **Actions**: Investigate, dismiss, force MFA, disable account, escalate to incident.
+
+#### GUI-03: User Risk Profile
+- **Features**: Composite risk score with factor breakdown. Access history timeline. Authentication pattern analysis (devices, locations, times). Active entitlements with last-used dates. Peer group comparison.
+
+#### GUI-04: Entitlement Review
+- **Features**: Periodic access certification queue. Entitlement cards showing user, role, resource, last access date, risk indicator. Bulk certify/revoke with justification. Manager delegation support.
+
+#### GUI-07: Access Analytics
+- **Features**: Geographic login map with anomaly highlighting. Authentication method breakdown. Login success/failure trends. Dormant account identification.
+
+### 20.5 UX Requirements
+
+| ID      | Requirement                                                                        |
+|---------|------------------------------------------------------------------------------------|
+| UX-01   | All critical actions SHALL be reachable within 3 clicks from the dashboard.         |
+| UX-02   | GUI SHALL support responsive layout for desktop (1280px+) and tablet (768px+).      |
+| UX-03   | GUI SHALL meet WCAG 2.1 AA accessibility compliance.                                |
+| UX-04   | GUI SHALL support dark mode and light mode themes.                                  |
+| UX-05   | Real-time data updates SHALL NOT cause visible page flicker or layout shifts.        |
+| UX-06   | All data tables SHALL support column reordering, resizing, and preference persistence. |
+| UX-07   | GUI SHALL display loading states, empty states, and error states for all data views. |
+
+### 20.6 API Contract (Backend for Frontend)
+
+| Endpoint Pattern                  | Method | Purpose                                  |
+|-----------------------------------|--------|------------------------------------------|
+| `/api/v1/identities`              | GET    | Paginated identity list with risk scores  |
+| `/api/v1/identities/{id}/risk`    | GET    | User risk profile and score breakdown      |
+| `/api/v1/identities/{id}/access`  | GET    | User access history and entitlements       |
+| `/api/v1/anomalies`               | GET    | Access anomaly feed with filters           |
+| `/api/v1/anomalies/{id}`          | GET/PUT| Anomaly detail and analyst actions         |
+| `/api/v1/entitlements/review`     | GET    | Entitlement review queue                   |
+| `/api/v1/entitlements/{id}/certify` | PUT  | Certify or revoke entitlement              |
+| `/api/v1/sod/violations`          | GET    | SoD violation list                         |
+| `/api/v1/dashboard/identity-risk` | GET    | Aggregated identity risk metrics           |
+| `/ws/notifications`              | WS     | Real-time anomaly and escalation alerts    |
+
+### 20.7 Security Controls (GUI-Specific)
+
+| ID       | Requirement                                                                        |
+|----------|------------------------------------------------------------------------------------|
+| GUI-SEC-01 | Authentication SHALL use SSO (OIDC/SAML) with session timeout of 30 minutes.    |
+| GUI-SEC-02 | RBAC SHALL restrict screen access by role (e.g., Entitlement Review restricted to IAM Governance role). |
+| GUI-SEC-03 | All API calls SHALL include CSRF token validation.                               |
+| GUI-SEC-04 | Account disable/MFA force actions SHALL require re-authentication.               |
+| GUI-SEC-05 | GUI SHALL enforce Content Security Policy (CSP) headers to prevent XSS.          |
+| GUI-SEC-06 | Session activity SHALL be logged for audit trail.                                |
+
+---
+
 ## Revision History
 
 | Version | Date       | Author              | Changes                          |

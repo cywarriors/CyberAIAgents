@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: incident-triage-agent-config
+data:
+  AGENT_ENV: "production"
+  LOG_LEVEL: "INFO"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.svc.cluster.local:9092"
+  KAFKA_CONSUMER_GROUP: "incident-triage-agent"
+  KAFKA_ALERT_TOPIC: "security.alerts"
+  KAFKA_TRIAGED_TOPIC: "security.triaged_incidents"
+  REDIS_URL: "redis://redis.svc.cluster.local:6379/1"
+  CORRELATION_WINDOW_SECONDS: "600"
+  WEIGHT_ASSET_CRITICALITY: "0.25"
+  WEIGHT_THREAT_INTEL: "0.20"
+  WEIGHT_ALERT_SEVERITY: "0.25"
+  WEIGHT_USER_RISK: "0.15"
+  WEIGHT_HISTORICAL_ACCURACY: "0.15"
+  PROMETHEUS_PORT: "9091"
+  HEALTH_CHECK_PORT: "8081"
