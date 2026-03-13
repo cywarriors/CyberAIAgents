@@ -1,5 +1,5 @@
-TASK 1: Want to develop AI Agent  as per "C:\Users\Rohit Singh\Documents\GitHub\CyberAIAgents\srs\srs-04-vulnerability-management-agent.md" with GUI
+TASK 1: Develop AI Agent as per "srs-07-cloud-security-posture-agent" with GUI
 
-TASK 2: Test with production like Mock data.
+TASK 2: Ensure code security check and fix for production readine
 
-TASK 3: Make sure developed to run indepenently from other agents and production ready.
+TASK 3: Test with production-like Mock data

@@ -1,0 +1,84 @@
+services:
+  cloud-security-api:
+    container_name: cloud-security-api
+    image: cloud-security-agent:latest
+    build:
+      context: ..
+      dockerfile: deploy_cspm/Dockerfile
+    ports:
+      - "8006:8006"
+    environment:
+      CSPM_API_HOST: "0.0.0.0"
+      CSPM_API_PORT: "8006"
+      CSPM_API_DEBUG: "false"
+      LOG_LEVEL: "info"
+      ENABLE_METRICS: "true"
+      METRICS_PORT: "8007"
+      ALLOWED_ORIGINS: "http://localhost:3006"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,cloud-security-api"
+    networks:
+      - cspm-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8006/api/v1/admin/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  cloud-security-gui:
+    container_name: cloud-security-gui
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ../cloud_security_agent/gui:/app
+    ports:
+      - "3006:3006"
+    environment:
+      VITE_API_URL: http://localhost:8006
+    command: sh -c "npm install && npm run dev"
+    networks:
+      - cspm-network
+    depends_on:
+      - cloud-security-api
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+  # Optional: Database for production use (PostgreSQL)
+  postgres:
+    container_name: cspm-postgres
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: cloud_security
+      POSTGRES_USER: cspmadmin
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    ports:
+      - "127.0.0.1:5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cspm-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - with-db
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+networks:
+  cspm-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: phishing-defense-agent
+  labels:
+    app: phishing-defense-agent
+spec:
+  selector:
+    app: phishing-defense-agent
+  ports:
+    - name: http
+      port: 8005
+      targetPort: http
+      protocol: TCP
+    - name: health
+      port: 8085
+      targetPort: health
+      protocol: TCP
+    - name: metrics
+      port: 9095
+      targetPort: metrics
+      protocol: TCP
+  type: ClusterIP

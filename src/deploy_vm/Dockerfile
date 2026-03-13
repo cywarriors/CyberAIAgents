@@ -44,9 +44,11 @@ RUN chown -R appuser:appuser /app
 # Switch to non-root user
 USER appuser
 
-# Health check
+# Health check (use stdlib, no external dependencies)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8003/api/v1/admin/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8003/api/v1/admin/health')" || exit 1
+
+EXPOSE 8003
 
 # Run API
-CMD ["uvicorn", "vulnerability_mgmt_agent.api.app:app", "--host", "0.0.0.0", "--port", "8003"]
+CMD ["uvicorn", "vulnerability_mgmt_agent.api.app:app", "--host", "0.0.0.0", "--port", "8003", "--no-access-log"]

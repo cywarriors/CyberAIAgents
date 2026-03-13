@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-security-config
+  namespace: cloud-security
+data:
+  risk-formula.yaml: |
+    severity_weight: 0.30
+    exposure_weight: 0.25
+    blast_radius_weight: 0.20
+    asset_criticality_weight: 0.15
+    compliance_impact_weight: 0.10
+
+  risk-thresholds.yaml: |
+    critical: 80.0
+    high: 60.0
+    medium: 40.0
+
+  compliance-frameworks.yaml: |
+    cis_benchmarks: true
+    nist_800_53: true
+    custom_policies: false
+
+  scan-settings.yaml: |
+    full_scan_interval_minutes: 360
+    drift_check_interval_minutes: 60
+    max_concurrent_account_scans: 5
+    iac_scan_timeout_seconds: 120
+
+  integrations.yaml: |
+    siem_timeout_seconds: 60
+    itsm_timeout_seconds: 60
+    opa_timeout_seconds: 30
+    max_concurrent_requests: 10
+    rate_limit_per_minute: 100

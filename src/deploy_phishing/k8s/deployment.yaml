@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phishing-defense-agent
+  labels:
+    app: phishing-defense-agent
+    srs: SRS-CYBER-05
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: phishing-defense-agent
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: phishing-defense-agent
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9095"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: phishing-defense-agent
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: agent
+          image: phishing-defense-agent:latest
+          ports:
+            - containerPort: 8005
+              name: http
+            - containerPort: 8085
+              name: health
+            - containerPort: 9095
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: phishing-defense-agent-config
+            - secretRef:
+                name: phishing-defense-agent-secrets
+          resources:
+            requests:
+              cpu: "2"
+              memory: 8Gi
+            limits:
+              cpu: "8"
+              memory: 32Gi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: phishing-defense-agent

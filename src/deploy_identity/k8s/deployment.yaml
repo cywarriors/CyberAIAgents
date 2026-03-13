@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-access-agent
+  labels:
+    app: identity-access-agent
+    srs: SRS-CYBER-06
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: identity-access-agent
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: identity-access-agent
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9096"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: identity-access-agent
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: agent
+          image: identity-access-agent:latest
+          ports:
+            - containerPort: 8006
+              name: http
+            - containerPort: 8086
+              name: health
+            - containerPort: 9096
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: identity-access-agent-config
+            - secretRef:
+                name: identity-access-agent-secrets
+          resources:
+            requests:
+              cpu: "2"
+              memory: 8Gi
+            limits:
+              cpu: "8"
+              memory: 32Gi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: identity-access-agent
