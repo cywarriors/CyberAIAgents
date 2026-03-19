@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  code-review-agent:
+    build: ..
+    dockerfile: deploy_code_review/Dockerfile
+    image: code-review-agent:latest
+    ports:
+      - "8011:8011"
+      - "8091:8091"
+    environment:
+      - CODE_REVIEW_AGENT_ENV=production
+      - CODE_REVIEW_LOG_LEVEL=INFO
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8011/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  code-review-gui:
+    image: nginx:alpine
+    ports:
+      - "3011:80"
+    volumes:
+      - ./gui-dist:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    depends_on:
+      - code-review-agent
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: code_review
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:

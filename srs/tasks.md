@@ -1,4 +1,4 @@
-TASK 1: Develop AI Agent as per "srs-07-cloud-security-posture-agent" with GUI
+TASK 1: Develop AI Agent as per "SRS-09: Threat Intelligence Agent" with GUI
 
 TASK 2: Ensure code security check and fix for production readine
 

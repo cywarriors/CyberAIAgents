@@ -1,0 +1,141 @@
+services:
+  threat-intel-agent:
+    build:
+      context: ..
+      dockerfile: deploy_threat_intel/Dockerfile
+    image: threat-intelligence-agent:latest
+    container_name: threat-intel-agent
+    ports:
+      - "8009:8009"
+      - "8089:8089"
+    environment:
+      - THREAT_INTEL_KAFKA_BOOTSTRAP=kafka:29092
+      - THREAT_INTEL_KAFKA_TOPIC=threat-intelligence
+      - THREAT_INTEL_KAFKA_GROUP=threat-intel-agent
+      - THREAT_INTEL_REDIS_URL=redis://redis:6379/4
+      - THREAT_INTEL_DATABASE_URL=postgresql://ti_user:${DB_PASSWORD}@postgres:5432/threat_intelligence
+      - THREAT_INTEL_ENV=production
+      - THREAT_INTEL_LOG_LEVEL=INFO
+      - THREAT_INTEL_CONFIDENCE_THRESHOLD=70
+      - THREAT_INTEL_DISTRIBUTION_CONFIDENCE_MIN=80
+    secrets:
+      - threat_intel_db_password
+      - threat_intel_osint_api_key
+      - threat_intel_commercial_api_key
+      - threat_intel_siem_api_key
+      - threat_intel_edr_api_key
+    networks:
+      - cyber-agents-net
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8089/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  threat-intel-gui:
+    build:
+      context: ../threat_intelligence_agent/gui
+      dockerfile: Dockerfile
+    image: threat-intelligence-gui:latest
+    container_name: threat-intel-gui
+    ports:
+      - "3009:3009"
+    networks:
+      - cyber-agents-net
+    depends_on:
+      - threat-intel-agent
+    restart: unless-stopped
+
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: threat-intel-kafka
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,INTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,INTERNAL://kafka:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_DEFAULT_REPLICATION_FACTOR=1
+    networks:
+      - cyber-agents-net
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    volumes:
+      - kafka-data:/bitnami/kafka
+
+  redis:
+    image: redis:7-alpine
+    container_name: threat-intel-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - cyber-agents-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis-data:/data
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: threat-intel-postgres
+    environment:
+      - POSTGRES_USER=ti_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/threat_intel_db_password
+      - POSTGRES_DB=threat_intelligence
+    secrets:
+      - threat_intel_db_password
+    networks:
+      - cyber-agents-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ti_user -d threat_intelligence"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+secrets:
+  threat_intel_db_password:
+    file: ./secrets/db_password.txt
+  threat_intel_osint_api_key:
+    file: ./secrets/osint_api_key.txt
+  threat_intel_commercial_api_key:
+    file: ./secrets/commercial_api_key.txt
+  threat_intel_siem_api_key:
+    file: ./secrets/siem_api_key.txt
+  threat_intel_edr_api_key:
+    file: ./secrets/edr_api_key.txt
+
+networks:
+  cyber-agents-net:
+    driver: bridge
+
+volumes:
+  kafka-data:
+  redis-data:
+  postgres-data:

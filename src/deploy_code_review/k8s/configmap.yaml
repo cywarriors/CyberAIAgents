@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: code-review-config
+data:
+  CODE_REVIEW_AGENT_ENV: "production"
+  CODE_REVIEW_LOG_LEVEL: "INFO"
+  CODE_REVIEW_API_PORT: "8011"
+  CODE_REVIEW_HEALTH_PORT: "8091"
+  CODE_REVIEW_METRICS_PORT: "9101"
+  CODE_REVIEW_VCS_PLATFORM: "github"
+  CODE_REVIEW_SUPPORTED_LANGUAGES: "python,javascript,java,go,csharp"
+  CODE_REVIEW_POLICY_BLOCK_SEVERITY: "critical"
+  CODE_REVIEW_POLICY_WARN_SEVERITY: "high"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: deception-honeypot-agent
+spec:
+  selector:
+    app: deception-honeypot-agent
+  ports:
+    - name: api
+      port: 8012
+      targetPort: 8012
+    - name: health
+      port: 8092
+      targetPort: 8092
+  type: ClusterIP

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: threat-intelligence-agent
+  namespace: cyber-agents
+  labels:
+    app: threat-intelligence-agent
+    component: threat-intel
+spec:
+  type: ClusterIP
+  selector:
+    app: threat-intelligence-agent
+  ports:
+    - name: http
+      port: 8009
+      targetPort: 8009
+      protocol: TCP
+    - name: health
+      port: 8089
+      targetPort: 8089
+      protocol: TCP
+    - name: metrics
+      port: 9099
+      targetPort: 9099
+      protocol: TCP

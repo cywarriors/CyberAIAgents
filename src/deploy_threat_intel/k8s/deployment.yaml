@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: threat-intelligence-agent
+  namespace: cyber-agents
+  labels:
+    app: threat-intelligence-agent
+    version: "1.0.0"
+    component: threat-intel
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "9099"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: threat-intelligence-agent
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: threat-intelligence-agent
+        version: "1.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9099"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: threat-intelligence-agent
+      automountServiceAccountToken: false
+      containers:
+        - name: threat-intelligence-agent
+          image: threat-intelligence-agent:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8009
+              name: http
+              protocol: TCP
+            - containerPort: 8089
+              name: health
+              protocol: TCP
+            - containerPort: 9099
+              name: metrics
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          envFrom:
+            - configMapRef:
+                name: threat-intelligence-config
+          env:
+            - name: THREAT_INTEL_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: threat-intelligence-secrets
+                  key: database-url
+            - name: THREAT_INTEL_OSINT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: threat-intelligence-secrets
+                  key: osint-api-key
+            - name: THREAT_INTEL_COMMERCIAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: threat-intelligence-secrets
+                  key: commercial-api-key
+            - name: THREAT_INTEL_SIEM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: threat-intelligence-secrets
+                  key: siem-api-key
+            - name: THREAT_INTEL_EDR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: threat-intelligence-secrets
+                  key: edr-api-key
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: threat-intelligence-agent

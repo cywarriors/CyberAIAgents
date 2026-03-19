@@ -1,0 +1,47 @@
+version: "3.9"
+services:
+  compliance-agent:
+    build:
+      context: ..
+      dockerfile: deploy_compliance/Dockerfile
+    ports: ["8010:8010", "8090:8090"]
+    environment:
+      - COMPLIANCE_AGENT_ENV=production
+    env_file: [.env]
+    read_only: true
+    tmpfs: ["/tmp:size=64m,noexec,nosuid,nodev"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    networks: [compliance-net]
+    restart: unless-stopped
+
+  compliance-gui:
+    build:
+      context: ../compliance_audit_agent/gui
+      dockerfile: Dockerfile
+    ports: ["3010:80"]
+    networks: [compliance-net]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    networks: [compliance-net]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: comp_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: compliance
+    secrets: [db_password]
+    networks: [compliance-net]
+    restart: unless-stopped
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+networks:
+  compliance-net:
+    driver: bridge
