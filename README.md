@@ -12,6 +12,11 @@ This repository contains a set of production-oriented cybersecurity AI agents im
 - `api/`, `gui/`, `integrations/`, `monitoring/`, `models/`, `nodes/`, and `rules/` for runtime capabilities
 - Docker and Kubernetes assets in a matching deployment folder
 
+Each implemented agent is a full-stack service with:
+
+- a backend in `api/` and `main.py` for orchestration, APIs, health checks, metrics, and integrations
+- a frontend in `gui/` for dashboards, analyst workflows, and operational views
+
 The current codebase includes 12 implemented agents and one additional agent defined at the SRS level but not yet implemented in `src/`.
 
 ## Implemented Agents
@@ -78,6 +83,7 @@ CyberAIAgents/
 Before deploying any agent, have the following in place:
 
 - Python 3.11+
+- Node.js 18+ and npm for GUI development and frontend builds
 - Docker and Docker Compose
 - Kubernetes cluster for production rollout
 - Container registry for agent images
@@ -108,6 +114,101 @@ cd .\src
 python -m pip install -r requirements.txt
 ```
 
+## Backend Architecture and Usage
+
+Each agent backend follows the same operational pattern:
+
+- `main.py` starts the agent runtime, workflow graph, and supporting services
+- `api/app.py` exposes the FastAPI application used by the GUI and external callers
+- `api/routes/` contains domain-specific endpoints
+- `monitoring/` exposes health and metrics endpoints for production observability
+- `integrations/` contains connectors for SIEM, EDR, IAM, scanners, ticketing, messaging, and other systems
+
+The backend stack is primarily:
+
+- FastAPI for HTTP APIs
+- Uvicorn for serving API and health endpoints
+- LangGraph for workflow orchestration
+- Prometheus-compatible metrics and health probes for operations
+
+Run a backend from `src/` with the package entry point:
+
+```bash
+python -m threat_detection_agent.main
+python -m incident_triage_agent.main
+python -m vulnerability_mgmt_agent.main
+python -m phishing_defense_agent.main
+python -m identity_access_agent.main
+python -m cloud_security_agent.main
+python -m malware_analysis_agent.main
+python -m threat_intelligence_agent.main
+python -m compliance_audit_agent.main
+python -m security_code_review_agent.main
+python -m deception_honeypot_agent.main
+python -m vapt_agent.main
+```
+
+In most cases this starts the agent processing pipeline plus the backend API and health endpoints required by the frontend and deployment platform.
+
+## Frontend Architecture and Usage
+
+Each implemented agent also has a GUI under `src/<agent>/gui/`.
+
+The frontend stack is consistent across agents:
+
+- React for the UI layer
+- TypeScript for frontend code
+- Vite for development and production builds
+- Axios or similar API clients for backend communication
+
+The frontend is intended for:
+
+- dashboards and summary metrics
+- investigation and analyst workflows
+- processing status views
+- administrative and operational controls
+
+To run a frontend locally, open the GUI directory for the agent you want to work on and install dependencies:
+
+```bash
+cd src/threat_detection_agent/gui
+npm install
+npm run dev
+```
+
+Build a production-ready frontend bundle with:
+
+```bash
+npm run build
+```
+
+The Vite configuration in each agent GUI typically proxies `/api` to the local backend, so frontend development should be done while the matching backend is running.
+
+## Full-Stack Local Development
+
+For the best local development workflow:
+
+1. Start the backend for the target agent from `src/`.
+2. In a second terminal, move into that agent's `gui/` directory.
+3. Run `npm install` if dependencies are not already present.
+4. Start the frontend with `npm run dev`.
+5. Open the Vite development URL in the browser.
+
+Example:
+
+```bash
+cd src
+python -m threat_detection_agent.main
+```
+
+In another terminal:
+
+```bash
+cd src/threat_detection_agent/gui
+npm install
+npm run dev
+```
+
 ## Running Agents Locally
 
 Run an individual agent from the `src` directory:
@@ -129,6 +230,8 @@ python -m vapt_agent.main
 ```
 
 In practice, you should run only the specific agent you are testing or operating, not all of them at once from the same terminal session.
+
+If you need the GUI, start the corresponding frontend separately from that agent's `gui/` directory.
 
 ## Test Execution
 
@@ -183,6 +286,8 @@ docker compose -f src/deploy_vapt/docker-compose.yml up --build
 
 Use the compose file from the deployment folder that matches the agent you are validating.
 
+Where the deployment assets include both backend services and frontend hosting, treat the backend API and the frontend bundle as separate deployable concerns unless the deployment folder explicitly combines them.
+
 ## Kubernetes Deployment
 
 Each deployment folder contains a `k8s/` directory with the manifests for cluster rollout. A standard deployment flow is:
@@ -204,18 +309,44 @@ kubectl apply -f src/deploy_deception/k8s/
 
 For production, replace direct `kubectl apply` with your normal GitOps or CI/CD promotion flow.
 
+## Frontend and Backend Production Deployment Model
+
+Use a clear separation of concerns in production:
+
+- Backend services run the agent workflow, integrations, APIs, health endpoints, and metrics exporters.
+- Frontend applications serve analyst dashboards and call the backend through the published API surface.
+- Ingress, TLS termination, authentication, and routing should be managed centrally.
+
+Recommended production model:
+
+1. Build and publish the backend container from the matching `deploy*` folder.
+2. Build the frontend bundle from the agent `gui/` directory.
+3. Serve the frontend through your preferred static hosting layer, reverse proxy, or frontend container.
+4. Route frontend API calls to the matching backend service.
+5. Restrict backend API exposure to only the required consumers and networks.
+
+At minimum, production deployment should define:
+
+- frontend base URL
+- backend API base URL
+- allowed CORS origins
+- trusted hosts
+- authentication and session handling
+- observability and audit logging
+
 ## Recommended Production Release Process
 
 1. Select the target agent and deployment folder.
 2. Review the matching SRS document in `srs/` and confirm operational scope.
-3. Set environment variables, secrets, and integration credentials.
-4. Run the agent-specific tests.
-5. Build and scan the container image.
-6. Push the image to the container registry.
-7. Update Kubernetes manifests or Helm values with the approved image tag.
-8. Promote to a non-production environment first.
-9. Validate health endpoints, metrics, logs, and downstream integrations.
-10. Roll out to production using a controlled deployment strategy.
+3. Set backend environment variables, secrets, and integration credentials.
+4. Build the frontend bundle and verify its API target configuration.
+5. Run the agent-specific backend tests and any frontend build validation.
+6. Build and scan the container image.
+7. Push the image to the container registry.
+8. Update Kubernetes manifests or Helm values with the approved image tag.
+9. Promote to a non-production environment first.
+10. Validate frontend access, backend health endpoints, metrics, logs, and downstream integrations.
+11. Roll out to production using a controlled deployment strategy.
 
 ## Production Operating Guidance
 
@@ -230,6 +361,8 @@ Use the same baseline controls for every agent:
 - Version detection rules, prompts, model settings, and policy artifacts.
 - Use human approval gates for high-impact or destructive actions.
 - Keep rollback-ready image tags and deployment manifests.
+- Lock down frontend-to-backend access with explicit CORS and host allowlists.
+- Publish only the frontend and the minimum required backend routes externally.
 
 ## Choosing the Right Agent
 
@@ -253,6 +386,8 @@ Use this repository as a modular platform. Pick the agent that matches the prima
 - `cybersecurity-ai-agent-types.md` for the high-level catalog of cybersecurity AI agent types
 - `srs/README.md` for the SRS index
 - `src/README.md` for the detailed Threat Detection Agent implementation guide
+- `src/<agent>/api/app.py` for backend API definitions
+- `src/<agent>/gui/package.json` and `src/<agent>/gui/vite.config.ts` for frontend build and local dev settings
 
 ## Current State Summary
 
