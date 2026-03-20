@@ -7,6 +7,7 @@ the LangGraph detection pipeline.
 
 from __future__ import annotations
 
+import logging
 import signal
 import sys
 import threading
@@ -94,14 +95,28 @@ def _consume_loop() -> None:
 
 def main() -> None:
     settings = get_settings()
+    log_level = getattr(logging, settings.log_level.upper(), logging.INFO)
     structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(
-            structlog.get_level_from_name(settings.log_level)
-        ),
+        wrapper_class=structlog.make_filtering_bound_logger(log_level),
     )
     logger.info("starting", env=settings.agent_env)
 
     _start_health_server(settings.health_check_port)
+    
+    # Start BFF API server in background thread
+    def _run_api():
+        from threat_detection_agent.api.app import app
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=8002,
+            log_level="info",
+        )
+    
+    api_thread = threading.Thread(target=_run_api, daemon=True, name="tda-api")
+    api_thread.start()
+    logger.info("api_server_started", port=8002)
+    
     _consume_loop()
 
 

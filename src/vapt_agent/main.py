@@ -8,11 +8,13 @@ through the LangGraph VAPT pipeline.
 from __future__ import annotations
 
 import json
+import logging
 import signal
 import sys
 import threading
 
 import structlog
+import uvicorn
 
 from vapt_agent.config import get_settings
 from vapt_agent.graph import get_compiled_graph
@@ -98,14 +100,30 @@ def _consume_loop() -> None:
 
 def main() -> None:
     settings = get_settings()
+    log_level = getattr(logging, settings.log_level.upper(), logging.INFO)
     structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(
-            structlog.get_level_from_name(settings.log_level)
-        ),
+        wrapper_class=structlog.make_filtering_bound_logger(log_level),
     )
     logger.info("starting", env=settings.agent_env)
 
+    # Start health server in background
     start_health_server()
+    
+    # Start BFF API server in background thread
+    def _run_api():
+        from vapt_agent.api.app import app
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=8086,
+            log_level="info",
+        )
+    
+    api_thread = threading.Thread(target=_run_api, daemon=True, name="vapt-api")
+    api_thread.start()
+    logger.info("api_server_started", port=8086)
+    
+    # Run Kafka consumer loop (blocks until interrupted)
     _consume_loop()
 
 

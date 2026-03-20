@@ -5,10 +5,26 @@ __pycache__/
 *.pyd
 *.env
 /.venv
+*.egg-info/
+.eggs/
+build/
+dist/
 
-# VS Code
+# Node / Frontend
+node_modules/
+dist/
+out/
+*.tsbuildinfo
+.turbo/
+.next/
+
+# VS Code / IDE
 .vscode/
 .history/
+.idea/
+*.iml
+*.swp
+*.swo
 
 # Byte-compiled / optimized / cache
 *.egg-info/
@@ -18,10 +34,13 @@ dist/
 
 # Tests
 .pytest_cache/
+.coverage/
+htmlcov/
 
 # Environments
 .env
 .env.local
+.env*.local
 
 # OS
 Thumbs.db
@@ -32,6 +51,7 @@ site-packages/
 
 # Logs
 *.log
+logs/
 
 # Docker
 docker-compose.override.yml
